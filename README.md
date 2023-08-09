@@ -34,3 +34,20 @@ HttpContext.Request.Host: Set using the X-Forwarded-Host header value.
 
 
 When client sends the request to your web application, it first reaches to the load balancer. Load balancer would create the X-Forwarded-For header and add the value of 192.168.98.99. Load balancer then forwards the request to web server. When web server receives the request, before the execution of the Forwarded Headers Middleware, the HttpContext.Connection.RemoteIpAddress field would be 10.130.10.77 and the X-Forwarded-For header would be 192.168.98.99. Since 10.130.10.77 is in the list of KnownProxies while 192.168.98.99 not, after execution of the Forwarded Headers Middleware, the HttpContext.Connection.RemoteIpAddress field would be 192.168.98.99.
+
+Configure the service to bypass the proxy IP
+
+```c#
+//read the known proxy
+var knownProxies = builder.Configuration.GetSection("KnownProxies").Value;
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = null;
+    options.KnownProxies.Clear();
+    foreach (var ip in knownProxies.Split(new char[] { ',' }))
+    {
+        options.KnownProxies.Add(IPAddress.Parse(ip));
+    }
+});
+```
