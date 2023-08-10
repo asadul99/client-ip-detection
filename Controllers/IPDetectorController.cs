@@ -1,5 +1,3 @@
-using client_ip_detection.Models;
-
 using Microsoft.AspNetCore.Mvc;
 
 namespace client_ip_detection.Controllers
@@ -8,15 +6,18 @@ namespace client_ip_detection.Controllers
     [Route("[controller]")]
     public class IPDetectorController : ControllerBase
     {
-        [HttpGet]
-        public IEnumerable<User> Get()
+        private readonly IHttpContextAccessor _contextAccessor;
+        public IPDetectorController(IHttpContextAccessor contextAccessor)
         {
-            return Enumerable.Range(1, 5).Select(index => new User
-            {
-                Id = Random.Shared.Next(10),
-                Name = index.ToString(),
-            })
-            .ToArray();
+            _contextAccessor = contextAccessor;
+        }
+
+        [HttpGet]
+        public string GetClientIP()
+        {
+            //get the clientIP
+            var clientIP = _contextAccessor?.HttpContext.Connection?.RemoteIpAddress?.MapToIPv4()?.ToString();
+            return clientIP;
         }
     }
 }
